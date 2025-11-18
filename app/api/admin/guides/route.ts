@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createGuideSchema } from '@/lib/validations/guide'
+import { handleError, formatErrorResponse } from '@/lib/errors'
 
 export async function GET() {
   try {
@@ -17,40 +19,23 @@ export async function GET() {
     })
     return NextResponse.json(guides)
   } catch (error) {
-    console.error('Error fetching guides:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch guides' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, key, description } = body
-
-    if (!name || !key) {
-      return NextResponse.json(
-        { error: 'Name and key are required' },
-        { status: 400 }
-      )
-    }
+    const validatedData = createGuideSchema.parse(body)
 
     const guide = await prisma.guide.create({
-      data: {
-        name,
-        key,
-        description,
-      },
+      data: validatedData,
     })
 
     return NextResponse.json(guide, { status: 201 })
   } catch (error) {
-    console.error('Error creating guide:', error)
-    return NextResponse.json(
-      { error: 'Failed to create guide' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }

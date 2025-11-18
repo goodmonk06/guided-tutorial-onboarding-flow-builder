@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { updateGuideSchema } from '@/lib/validations/guide'
+import { handleError, formatErrorResponse, NotFoundError } from '@/lib/errors'
 
 export async function GET(
   request: NextRequest,
@@ -18,16 +20,13 @@ export async function GET(
     })
 
     if (!guide) {
-      return NextResponse.json({ error: 'Guide not found' }, { status: 404 })
+      throw new NotFoundError('Guide not found')
     }
 
     return NextResponse.json(guide)
   } catch (error) {
-    console.error('Error fetching guide:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch guide' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }
 
@@ -37,24 +36,17 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { name, key, description } = body
+    const validatedData = updateGuideSchema.parse(body)
 
     const guide = await prisma.guide.update({
       where: { id: params.id },
-      data: {
-        name,
-        key,
-        description,
-      },
+      data: validatedData,
     })
 
     return NextResponse.json(guide)
   } catch (error) {
-    console.error('Error updating guide:', error)
-    return NextResponse.json(
-      { error: 'Failed to update guide' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }
 
@@ -69,10 +61,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting guide:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete guide' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }

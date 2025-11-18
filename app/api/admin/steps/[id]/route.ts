@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { updateStepSchema } from '@/lib/validations/guide'
+import { handleError, formatErrorResponse } from '@/lib/errors'
 
 export async function PUT(
   request: NextRequest,
@@ -7,27 +9,17 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { orderIndex, selector, contentMarkdown, placement, routePath, metaJson } = body
+    const validatedData = updateStepSchema.parse(body)
 
     const step = await prisma.guideStep.update({
       where: { id: params.id },
-      data: {
-        orderIndex,
-        selector,
-        contentMarkdown,
-        placement,
-        routePath,
-        metaJson,
-      },
+      data: validatedData,
     })
 
     return NextResponse.json(step)
   } catch (error) {
-    console.error('Error updating step:', error)
-    return NextResponse.json(
-      { error: 'Failed to update step' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }
 
@@ -42,10 +34,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting step:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete step' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }

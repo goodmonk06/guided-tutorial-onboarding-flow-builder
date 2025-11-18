@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createStepSchema } from '@/lib/validations/guide'
+import { handleError, formatErrorResponse } from '@/lib/errors'
 
 export async function GET(
   request: NextRequest,
@@ -15,11 +17,8 @@ export async function GET(
 
     return NextResponse.json(steps)
   } catch (error) {
-    console.error('Error fetching steps:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch steps' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }
 
@@ -29,14 +28,7 @@ export async function POST(
 ) {
   try {
     const body = await request.json()
-    const { orderIndex, selector, contentMarkdown, placement, routePath, metaJson } = body
-
-    if (selector === undefined || contentMarkdown === undefined) {
-      return NextResponse.json(
-        { error: 'Selector and contentMarkdown are required' },
-        { status: 400 }
-      )
-    }
+    const validatedData = createStepSchema.parse(body)
 
     // Get the highest orderIndex for this guide
     const maxStep = await prisma.guideStep.findFirst({
@@ -44,26 +36,23 @@ export async function POST(
       orderBy: { orderIndex: 'desc' },
     })
 
-    const newOrderIndex = orderIndex ?? (maxStep ? maxStep.orderIndex + 1 : 0)
+    const newOrderIndex = validatedData.orderIndex ?? (maxStep ? maxStep.orderIndex + 1 : 0)
 
     const step = await prisma.guideStep.create({
       data: {
         guideId: params.id,
         orderIndex: newOrderIndex,
-        selector,
-        contentMarkdown,
-        placement: placement || 'bottom',
-        routePath,
-        metaJson,
+        selector: validatedData.selector,
+        contentMarkdown: validatedData.contentMarkdown,
+        placement: validatedData.placement || 'bottom',
+        routePath: validatedData.routePath,
+        metaJson: validatedData.metaJson,
       },
     })
 
     return NextResponse.json(step, { status: 201 })
   } catch (error) {
-    console.error('Error creating step:', error)
-    return NextResponse.json(
-      { error: 'Failed to create step' },
-      { status: 500 }
-    )
+    const errorResponse = handleError(error)
+    return formatErrorResponse(errorResponse, errorResponse.error.statusCode)
   }
 }
