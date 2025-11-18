@@ -50,7 +50,7 @@ export function handleError(error: unknown): ErrorResponse {
       error: {
         message: 'Validation failed',
         code: 'VALIDATION_ERROR',
-        details: error.errors?.map((e) => ({
+        details: error.issues?.map((e: any) => ({
           path: e.path?.join('.') || '',
           message: e.message,
         })) || [],

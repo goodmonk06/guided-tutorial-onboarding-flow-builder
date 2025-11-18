@@ -12,7 +12,7 @@ const trackProgressSchema = z.object({
   userId: z.string(),
   action: z.enum(['start', 'complete', 'skip', 'step_view']),
   stepId: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 })
 
 export async function POST(request: NextRequest) {
