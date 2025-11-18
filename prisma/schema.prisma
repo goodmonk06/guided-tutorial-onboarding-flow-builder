@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Guide {
+  id          String      @id @default(cuid())
+  name        String
+  key         String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  steps       GuideStep[]
+
+  @@index([key])
+}
+
+model GuideStep {
+  id              String   @id @default(cuid())
+  guideId         String
+  orderIndex      Int
+  selector        String
+  contentMarkdown String
+  placement       String   @default("bottom")
+  routePath       String?
+  metaJson        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  guide Guide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  @@index([guideId, orderIndex])
+}
