@@ -5,9 +5,10 @@ import { logger } from '@/lib/logger'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const searchParams = request.nextUrl.searchParams
     const days = parseInt(searchParams.get('days') || '30', 10)
 
@@ -16,7 +17,7 @@ export async function GET(
 
     const analytics = await prisma.guideAnalytics.findMany({
       where: {
-        guideId: params.id,
+        guideId: id,
         date: {
           gte: startDate,
         },
@@ -47,7 +48,7 @@ export async function GET(
     )
 
     const result = {
-      guideId: params.id,
+      guideId: id,
       period: { days, startDate, endDate: new Date() },
       summary: {
         impressions: summary.totalImpressions,
@@ -68,7 +69,7 @@ export async function GET(
       dailyData: analytics,
     }
 
-    logger.debug('Analytics fetched', { guideId: params.id, days, dataPoints: analytics.length })
+    logger.debug('Analytics fetched', { guideId: id, days, dataPoints: analytics.length })
 
     return NextResponse.json(result)
   } catch (error) {

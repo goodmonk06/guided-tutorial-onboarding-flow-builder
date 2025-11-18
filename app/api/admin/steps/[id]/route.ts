@@ -5,14 +5,15 @@ import { handleError, formatErrorResponse } from '@/lib/errors'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = updateStepSchema.parse(body)
 
     const step = await prisma.guideStep.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
     })
 
@@ -25,11 +26,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await prisma.guideStep.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })

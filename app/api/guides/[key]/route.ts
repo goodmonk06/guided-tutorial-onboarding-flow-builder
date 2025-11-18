@@ -3,11 +3,12 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { key: string } }
+  { params }: { params: Promise<{ key: string }> }
 ) {
   try {
+    const { key } = await params
     const guide = await prisma.guide.findUnique({
-      where: { key: params.key },
+      where: { key },
       include: {
         steps: {
           orderBy: {

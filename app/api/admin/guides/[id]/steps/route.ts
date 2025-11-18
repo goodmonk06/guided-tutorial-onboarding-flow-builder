@@ -5,11 +5,12 @@ import { handleError, formatErrorResponse } from '@/lib/errors'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const steps = await prisma.guideStep.findMany({
-      where: { guideId: params.id },
+      where: { guideId: id },
       orderBy: {
         orderIndex: 'asc',
       },
@@ -24,15 +25,16 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = createStepSchema.parse(body)
 
     // Get the highest orderIndex for this guide
     const maxStep = await prisma.guideStep.findFirst({
-      where: { guideId: params.id },
+      where: { guideId: id },
       orderBy: { orderIndex: 'desc' },
     })
 
@@ -40,7 +42,7 @@ export async function POST(
 
     const step = await prisma.guideStep.create({
       data: {
-        guideId: params.id,
+        guideId: id,
         orderIndex: newOrderIndex,
         selector: validatedData.selector,
         contentMarkdown: validatedData.contentMarkdown,

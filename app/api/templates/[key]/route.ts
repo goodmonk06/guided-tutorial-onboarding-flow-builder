@@ -5,18 +5,19 @@ import { logger } from '@/lib/logger'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { key: string } }
+  { params }: { params: Promise<{ key: string }> }
 ) {
   try {
+    const { key } = await params
     const template = await prisma.guideTemplate.findUnique({
-      where: { key: params.key },
+      where: { key },
     })
 
     if (!template) {
       throw new NotFoundError('Template not found')
     }
 
-    logger.debug('Template fetched', { key: params.key })
+    logger.debug('Template fetched', { key })
 
     return NextResponse.json(template)
   } catch (error) {

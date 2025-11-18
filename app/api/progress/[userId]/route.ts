@@ -5,12 +5,13 @@ import { logger } from '@/lib/logger'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params
     const progress = await prisma.userProgress.findMany({
       where: {
-        userId: params.userId,
+        userId,
       },
       include: {
         guide: {
@@ -27,7 +28,7 @@ export async function GET(
       },
     })
 
-    logger.debug('User progress fetched', { userId: params.userId, count: progress.length })
+    logger.debug('User progress fetched', { userId, count: progress.length })
 
     return NextResponse.json(progress)
   } catch (error) {

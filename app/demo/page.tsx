@@ -4,8 +4,12 @@ import { useEffect, useState } from 'react'
 
 export default function DemoPage() {
   const [guideStarted, setGuideStarted] = useState(false)
+  const [origin, setOrigin] = useState('')
 
   useEffect(() => {
+    // Set origin for code example
+    setOrigin(window.location.origin)
+
     // Load the widget script
     const script = document.createElement('script')
     script.src = '/widget.js'
@@ -146,19 +150,19 @@ export default function DemoPage() {
             To integrate this widget into your own app, simply add:
           </p>
           <pre className="bg-gray-800 p-4 rounded-lg overflow-x-auto">
-            <code className="text-sm text-green-400">{`<!-- Add this to your HTML -->
-<script src="${window.location.origin}/widget.js"></script>
+            <code className="text-sm text-green-400">{origin ? `<!-- Add this to your HTML -->
+<script src="${origin}/widget.js"></script>
 
 <!-- Initialize the widget -->
 <script>
   OnboardingWidget.init({
     guideKey: 'demo-app-tour',
-    apiBaseUrl: '${window.location.origin}',
+    apiBaseUrl: '${origin}',
     onComplete: function() {
       console.log('Tour completed!');
     }
   });
-</script>`}</code>
+</script>` : '<!-- Loading... -->'}</code>
           </pre>
         </div>
       </main>
